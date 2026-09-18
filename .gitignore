@@ -1,0 +1,13 @@
+# ===== 凭证与本地数据（绝不能上传）=====
+sessdata.txt
+cookies.txt
+*.sessdata
+.edge_profile/
+scripts/.edge_profile/
+__pycache__/
+*.pyc
+
+# ===== 本地开发产物 =====
+node_modules/
+.DS_Store
+Thumbs.db

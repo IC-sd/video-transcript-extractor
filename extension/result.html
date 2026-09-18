@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B站文稿提取结果</title>
+<style>
+  :root{
+    --bg:#f2f3f5; --card:#fff; --line:#e5e6eb; --text:#1d2129; --sub:#86909c;
+    --accent:#165dff; --accent-soft:#e8f3ff; --ok:#00b42a; --err:#f53f3f; --warn:#ff7d00;
+    --code:#f7f8fa;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:"Microsoft YaHei UI","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    display:flex;flex-direction:column;height:100vh;overflow:hidden;
+  }
+  header{
+    background:var(--card);border-bottom:1px solid var(--line);
+    padding:16px 26px 14px;flex:0 0 auto;
+  }
+  .brand{font-size:12px;color:var(--sub);letter-spacing:.5px;margin-bottom:7px;}
+  h1{font-size:18px;margin:0 0 7px;line-height:1.4;font-weight:700;}
+  .meta{font-size:12.5px;color:var(--sub);display:flex;flex-wrap:wrap;gap:16px;}
+  .badge{
+    display:inline-block;font-size:11px;padding:1px 7px;border-radius:4px;
+    background:#f2f3f5;color:var(--sub);
+  }
+  .badge.ai{background:#fff7e8;color:#a85200;}
+  .badge.cc{background:#e8ffea;color:#0f8a2e;}
+
+  nav.tabs{
+    background:var(--card);border-bottom:1px solid var(--line);
+    padding:0 26px;display:flex;gap:4px;flex:0 0 auto;
+  }
+  .tab{
+    background:none;border:none;border-bottom:2px solid transparent;
+    padding:11px 16px;font:inherit;font-size:13.5px;color:var(--sub);
+    cursor:pointer;transition:.15s;font-weight:500;
+  }
+  .tab:hover{color:var(--text);}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+  .tab .cnt{font-size:11px;color:var(--sub);margin-left:5px;}
+
+  main{flex:1 1 auto;overflow:auto;padding:22px 26px 30px;}
+  .pane{display:none;max-width:900px;margin:0 auto;}
+  .pane.active{display:block;}
+
+  .doc{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:26px 30px;font-size:14px;line-height:1.95;
+  }
+  .doc h1{font-size:19px;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid var(--line);}
+  .doc h2{font-size:15.5px;margin:26px 0 12px;color:var(--text);
+    padding-left:10px;border-left:3px solid var(--accent);}
+  .doc h2:first-child{margin-top:0;}
+  .doc h3{font-size:14px;margin:18px 0 8px;color:#4e5969;}
+  .doc p{margin:9px 0;}
+  .doc ul,.doc ol{margin:9px 0;padding-left:22px;}
+  .doc li{margin:6px 0;}
+  .doc blockquote{
+    margin:12px 0;padding:10px 16px;background:var(--accent-soft);
+    border-left:3px solid var(--accent);border-radius:0 8px 8px 0;color:#245bdb;font-size:13.5px;
+  }
+  .doc code{
+    background:var(--code);border:1px solid var(--line);border-radius:4px;
+    padding:1px 5px;font-family:Consolas,Monaco,monospace;font-size:12.5px;color:#c7254e;
+  }
+  .doc strong{font-weight:700;}
+  .doc hr{border:none;border-top:1px solid var(--line);margin:20px 0;}
+  .doc table{
+    border-collapse:collapse;margin:12px 0;font-size:13px;width:auto;
+  }
+  .doc th,.doc td{border:1px solid var(--line);padding:6px 12px;text-align:left;}
+  .doc th{background:#fafbfc;font-weight:600;color:#4e5969;}
+
+  /* 转录文字里的时间戳 */
+  .ts{
+    display:inline-block;background:var(--code);border:1px solid var(--line);
+    border-radius:4px;padding:0 6px;margin-right:8px;
+    font-family:Consolas,Monaco,monospace;font-size:12px;color:var(--accent);
+    vertical-align:1px;
+  }
+  .seg{margin:0 0 14px;}
+
+  .placeholder{
+    text-align:center;color:var(--sub);padding:60px 20px;font-size:13.5px;line-height:2;
+  }
+  .placeholder b{color:var(--text);}
+
+  footer{
+    flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);
+    padding:13px 26px;
+  }
+  .bar{max-width:900px;margin:0 auto;}
+  .save-row{display:flex;align-items:center;gap:10px;margin-bottom:11px;flex-wrap:wrap;}
+  .save-row label.lbl{font-size:12.5px;color:var(--sub);}
+  .save-row input[type=text]{
+    flex:1 1 220px;min-width:150px;padding:7px 10px;border:1px solid var(--line);
+    border-radius:7px;font:inherit;font-size:12.5px;color:var(--text);background:#fafbfc;
+  }
+  .save-row input[type=text]:focus{outline:none;border-color:var(--accent);background:#fff;}
+  .picked-tag{
+    flex:1 1 200px;font-size:12.5px;font-family:Consolas,Monaco,monospace;color:var(--text);
+    background:#f7f8fa;border:1px solid var(--line);border-radius:7px;padding:7px 11px;
+    word-break:break-all;
+  }
+  .mode-tag{
+    font-size:12px;color:var(--sub);background:#f2f3f5;border-radius:6px;padding:5px 10px;
+    flex:0 0 auto;
+  }
+  button.mini{padding:7px 14px;font-size:12.5px;}
+  .hide{display:none !important;}
+  label.chk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#4e5969;cursor:pointer;user-select:none;}
+  input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;margin:0;}
+  .btn-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  button{
+    font:inherit;cursor:pointer;border:none;border-radius:8px;
+    padding:9px 20px;font-size:13.5px;font-weight:600;transition:.15s;
+  }
+  button.primary{background:var(--accent);color:#fff;}
+  button.primary:hover{opacity:.9;}
+  button.primary:disabled{background:#c9cdd4;cursor:not-allowed;}
+  button.ghost{background:#f2f3f5;color:#4e5969;}
+  button.ghost:hover{background:#e5e6eb;}
+  .msg{font-size:12.5px;color:var(--ok);}
+  .msg.err{color:var(--err);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">B站文稿提取器 · 结果</div>
+  <h1 id="ttl">加载中…</h1>
+  <div class="meta" id="meta"></div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="transcript">转录文字<span class="cnt" id="cntT"></span></button>
+  <button class="tab" data-tab="aisum">AI 总结<span class="cnt" id="cntA"></span></button>
+</nav>
+
+<main>
+  <section class="pane active" id="pane-transcript">
+    <div class="doc" id="docT"></div>
+  </section>
+  <section class="pane" id="pane-aisum">
+    <div class="doc" id="docA"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="bar">
+    <div class="save-row">
+      <label class="lbl" id="dirLabel">保存到</label>
+      <input type="text" id="dirInput" placeholder="留空 = 直接存到浏览器下载目录">
+      <span class="picked-tag hide" id="dirPicked"></span>
+      <span class="mode-tag hide" id="modeTag"></span>
+      <button class="ghost mini hide" id="btnPick">更换文件夹</button>
+      <button class="ghost mini" id="btnAs">另存为…</button>
+    </div>
+    <div class="btn-row">
+      <button class="primary" id="btnSave">保存当前内容</button>
+      <button class="ghost" id="btnCopy">复制</button>
+      <span class="msg" id="msg"></span>
+    </div>
+  </div>
+</footer>
+
+<script src="lib/polish.js"></script>
+<script src="lib/aisum.js"></script>
+<script src="lib/summarize.js"></script>
+<script src="lib/fsdir.js"></script>
+<script src="result.js"></script>
+</body>
+</html>
