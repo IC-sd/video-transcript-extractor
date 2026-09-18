@@ -55,6 +55,20 @@
   // 这些单字在口语里常被重复说两遍（「在在」「我我」），但都不是正常叠词，重复即口误
   const DUP_CHARS = '我你他她在是的了就都有和这那很也不没要会能对吧啊呢嘛';
 
+  /**
+   * 归一化空白：中文（含全角标点）之间的空格去掉（中文不分词用空格），
+   * 但拉丁字母/数字之间的空格必须保留 —— 否则 "AI agent" 会变成 "AIagent"。
+   */
+  function tidySpaces(s) {
+    let out = String(s || '').replace(/[\t\r\n]+/g, ' ').replace(/ {2,}/g, ' ').trim();
+    let prev;
+    do {
+      prev = out;
+      out = out.replace(/([\u4e00-\u9fa5\u3040-\u30ff\uff00-\uffef]) +([\u4e00-\u9fa5\u3040-\u30ff\uff00-\uffef])/g, '$1$2');
+    } while (out !== prev);
+    return out;
+  }
+
   /** 按升序的区间列表从后往前删除，避免索引错乱；times 同步删除 */
   function spliceOut(text, times, ranges) {
     for (let i = ranges.length - 1; i >= 0; i--) {
@@ -300,7 +314,7 @@
     const times = [];
     for (const it of list) {
       const c = { from: it.from || 0, to: typeof it.to === 'number' ? it.to : (it.from || 0) + 3 };
-      const t = (it.content || '').replace(/\s+/g, '');
+      const t = tidySpaces(it.content);
       for (let i = 0; i < t.length; i++) times.push(c);
       text += t;
     }
