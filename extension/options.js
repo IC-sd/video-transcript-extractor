@@ -137,6 +137,23 @@ function syncRows(prefix) {
     setMsg('已清除总结文件夹');
   });
 
+  // 手机端 Chromium（Edge for Android 等）没有 File System Access API，
+  // 「固定文件夹」会直接报错 —— 检测到就禁用并说明，避免用户白试。
+  if (!window.showDirectoryPicker) {
+    ['tMode', 'aMode'].forEach((name) => {
+      const r = document.querySelector(`input[name="${name}"][value="dir"]`);
+      if (r) {
+        r.disabled = true;
+        if (r.parentElement) r.parentElement.style.opacity = '.45';
+        r.title = '当前浏览器不支持目录授权（移动端没有此 API），请改用「每次询问」或「下载目录子目录」';
+      }
+    });
+    ['tPick', 'aPick'].forEach((id) => {
+      const b = $(id);
+      if (b) { b.disabled = true; b.title = '当前浏览器不支持目录授权，请改用其他两种保存方式'; }
+    });
+  }
+
   $('save').addEventListener('click', () => autosave());
 
   // ---------- 自动保存 ----------

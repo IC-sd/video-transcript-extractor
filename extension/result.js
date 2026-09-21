@@ -336,6 +336,15 @@ function switchTab(tab) {
   $('btnSave').addEventListener('click', () => save());
   $('btnCopy').addEventListener('click', copy);
   $('btnAs').addEventListener('click', () => save(curTab, true));   // 强制弹保存对话框
+  // 移动端没有 File System Access API，隐藏「选择文件夹」入口
+  if (!window.showDirectoryPicker) {
+    const bp = $('btnPick');
+    if (bp) {
+      bp.disabled = true;
+      bp.title = '当前浏览器不支持目录授权，可到设置页改用「下载目录子目录」';
+    }
+  }
+
   $('btnPick').addEventListener('click', async () => {
     try {
       const h = await window.BiliFsDir.pick({ id: 'bili-' + curTab + '-dir', mode: 'readwrite' });
