@@ -38,6 +38,18 @@
 |---|---|
 | ![转录文字](screenshots/新版-结果页-转录.png) | ![设置](screenshots/精简后-设置页.png) |
 
+## 手机上使用（Edge for Android）
+
+Edge for Android 支持扩展，但**只能按 crx 文件安装**（移动端不支持加载解压文件夹）：
+
+1. 从本仓库的 [Releases](../../releases) 下载 `.crx` 文件
+2. 手机 Edge → `···` → 设置 → **关于 Microsoft Edge** → 连续点 5 次版本号
+3. 返回设置页，底部出现「**开发人员选项**」→ 点「**Extension install by crx**」→ 选择该文件
+
+**移动端限制**：Android 浏览器没有 File System Access API，所以「固定文件夹」模式不可用
+（扩展会自动禁用它）。请改用「每次询问」或「下载目录子目录」。
+另外扩展的配置与文稿存在**各设备本地**，手机与电脑互不同步，需分别配置。
+
 ## AI 总结配置
 
 设置页 →「AI 总结」，填入任意 OpenAI 兼容接口（三样：接口地址 / API Key / 模型名）：
